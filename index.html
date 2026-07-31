@@ -183,6 +183,10 @@
   .submit-btn{justify-self:start; background:var(--maroon); color:var(--paper); border:none; padding:14px 30px; border-radius:8px; font-weight:600; font-size:0.95rem; cursor:pointer; transition:background .15s;}
   .submit-btn:hover, .submit-btn:focus-visible{background:var(--maroon-deep);}
   .form-note{font-size:0.8rem; color:var(--ink-soft);}
+  .submit-btn:disabled{opacity:0.65; cursor:not-allowed;}
+  .form-status{font-size:0.85rem; font-weight:600; min-height:1.2em;}
+  .form-status.form-success{color:#1e7d34;}
+  .form-status.form-error{color:var(--chili);}
 
   /* ===== Footer ===== */
   footer{background:var(--maroon); color:var(--paper); padding:0;}
@@ -481,7 +485,8 @@
           <div class="info-row"><span class="k">Hours</span><span class="v">Mon–Sat, 10:00 AM–7:00 PM</span></div>
         </div>
 
-        <form id="inquiryForm" onsubmit="event.preventDefault(); alert('Thanks! This is a demo form — connect it to email or a backend to receive real inquiries.'); this.reset();">
+        <form id="inquiryForm">
+          <input type="hidden" name="to_email" value="info@mihirenterprise.in">
           <div class="form-row">
             <div>
               <label for="name">Full name</label>
@@ -505,7 +510,7 @@
             <textarea id="message" name="message" placeholder="e.g. I run a kirana store and want to start stocking Balaji Wafers..."></textarea>
           </div>
           <button type="submit" class="submit-btn">Send Inquiry</button>
-          <p class="form-note">This form currently collects details in your browser only.</p>
+          <p id="formStatus" class="form-note form-status" role="status" aria-live="polite"></p>
         </form>
       </div>
     </div>
@@ -557,6 +562,45 @@
     });
   }, { rootMargin: '-40% 0px -50% 0px' });
   sections.forEach(s => s && io.observe(s));
+</script>
+
+<!-- EmailJS -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+  (function(){
+    emailjs.init({ publicKey: "HVl5L6sPhjmNVgzpH" });
+  })();
+
+  const inquiryForm = document.getElementById('inquiryForm');
+  const formStatus = document.getElementById('formStatus');
+  const submitBtn = inquiryForm.querySelector('.submit-btn');
+
+  inquiryForm.addEventListener('submit', function(e){
+    e.preventDefault();
+
+    formStatus.textContent = '';
+    formStatus.classList.remove('form-success', 'form-error');
+
+    const originalLabel = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+
+    emailjs.sendForm('service_2t5770c', 'template_zlzlbxq', inquiryForm)
+      .then(function(){
+        formStatus.textContent = "Thanks! Your enquiry has been sent to Mihir Enterprise — we'll get back to you soon.";
+        formStatus.classList.add('form-success');
+        inquiryForm.reset();
+      })
+      .catch(function(error){
+        console.error('EmailJS error:', error);
+        formStatus.textContent = 'Sorry, something went wrong sending your enquiry. Please call us at +91 99877 68850 or try again.';
+        formStatus.classList.add('form-error');
+      })
+      .finally(function(){
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalLabel;
+      });
+  });
 </script>
 
 </body>
